@@ -11,7 +11,7 @@ import javax.persistence.Id;
 
 public class Car {
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     int id; // Stores the id number of each Car (this will be a running number)
     private String brand; // Brand of the car (e.g. Toyota)
     private String model; // Model of the car (e.g. Camry)

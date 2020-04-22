@@ -4,10 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+
 
 @Repository
 
@@ -16,30 +18,35 @@ public class CarRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+
     public Car save(Car car) {
 
-        //SimpleJdbcInsert is used to easily insert into the table, and fetch the auto generated ID column
-        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate).withTableName("car").usingGeneratedKeyColumns("id");
+        String sql = "INSERT INTO car (brand, model, year) VALUES (?, ?, ?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        //Set the column names and values to be inserted into the table
-        Map<String, Object> parameters = new HashMap<String, Object>();
+        // Here, we use jdbcTemplate's update method to return the generated key from database (i.e. AUTO_INCREMENT column)
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, car.getBrand());
+            ps.setString(2, car.getModel());
+            ps.setString(3, car.getYear());
+            return ps;
+        }, keyHolder);
 
-        parameters.put("brand", car.getBrand());
-        parameters.put("model", car.getModel());
-        parameters.put("year", car.getYear());
+        int generatedId = keyHolder.getKey().intValue();
 
-        //Execute the SQL insert, and fetch the auto generated ID
-        int generatedId = simpleJdbcInsert.executeAndReturnKey(parameters).intValue();
-
-        //Update the original car object with the new generated ID and return it back
+        // The generated key from database is updated back into car
+        // so that we can return the new car object together with the generated Id
         car.setId(generatedId);
 
         return car;
+
     }
+
 
     public Iterable<Car> findAll(){
 
-        String sql = "SELECT * FROM car";
+        String sql = "SELECT id, brand, model, year FROM car";
         Iterable<Car> result = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(Car.class));
         return result;
 
@@ -47,7 +54,7 @@ public class CarRepository {
 
     public Car findById(int id){
 
-        String sql = "SELECT * FROM car WHERE id = ?";
+        String sql = "SELECT id, brand, model, year FROM car WHERE id = ?";
         Car result;
 
         try {
@@ -69,6 +76,8 @@ public class CarRepository {
         Object[] parameters = new Object[]{id};
         int rowsDeleted = jdbcTemplate.update(sql, parameters);
 
+        // If no records were deleted, then we know that the Id does not exists.
+        // Therefore, error is returned.
         if (rowsDeleted == 0){
             throw new CarNotFoundException("No item found to delete: " + id);
         }
@@ -82,14 +91,15 @@ public class CarRepository {
         Object[] parameters = new Object[]{car.getBrand(), car.getModel(), car.getYear(), id};
 
         // We need to fetch the number of rows updated so
-        // that we can know whether an original record by the same Id was updated.
+        // that we can know whether the update actually happened.
         int rowsUpdated = jdbcTemplate.update(sql, parameters);
 
-        // If no records were updated, then we shall insert a new record.
+        // If no records were updated, then we know that the Id does not exists.
+        // Therefore, error is returned.
         if(rowsUpdated == 0){
-            return save(car);
+            throw new CarNotFoundException("No item found to be updated: " + id);
         }
-        // Else, we can return te updated car along.
+        // Else, we can return the updated car.
         else {
             car.setId(id);
             return car;

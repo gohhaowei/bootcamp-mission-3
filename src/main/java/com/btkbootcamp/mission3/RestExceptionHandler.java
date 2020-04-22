@@ -10,7 +10,7 @@ public class RestExceptionHandler {
 
     @ExceptionHandler
     public ResponseEntity<RestErrorResponse> handleException(CarNotFoundException e){
-        HttpStatus httpStatus = HttpStatus.NOT_FOUND;
+        HttpStatus httpStatus = HttpStatus.NOT_FOUND; //HTTP 404
         RestErrorResponse restErrorResponse = new RestErrorResponse();
         restErrorResponse.setStatus(httpStatus.value());
         restErrorResponse.setMessage(e.getMessage());
@@ -20,7 +20,7 @@ public class RestExceptionHandler {
 
     @ExceptionHandler
     public ResponseEntity<RestErrorResponse> handleException(Exception e){
-        HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
+        HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR; //HTTP 500
         RestErrorResponse restErrorResponse = new RestErrorResponse();
         restErrorResponse.setStatus(httpStatus.value());
         restErrorResponse.setMessage(e.getMessage());

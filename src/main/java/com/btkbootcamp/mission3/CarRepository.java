@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 import java.util.HashMap;
 import java.util.Map;
 
-
 @Repository
+
 public class CarRepository {
 
     @Autowired
@@ -48,16 +48,18 @@ public class CarRepository {
     public Car findById(int id){
 
         String sql = "SELECT * FROM car WHERE id = ?";
+        Car result;
 
         try {
             Object[] parameters = new Object[]{id};
-            Car result = jdbcTemplate.queryForObject(sql, parameters, BeanPropertyRowMapper.newInstance(Car.class));
-            return result;
+            result = jdbcTemplate.queryForObject(sql, parameters, BeanPropertyRowMapper.newInstance(Car.class));
         }
         // If id is not found, then we throw our custom exception CarNotFoundException
         catch (EmptyResultDataAccessException e) {
-            throw (new CarNotFoundException(id));
+            throw new CarNotFoundException("Item not found: " + id);
         }
+
+        return result;
 
     }
 
@@ -65,7 +67,11 @@ public class CarRepository {
 
         String sql = "DELETE FROM car WHERE id = ?";
         Object[] parameters = new Object[]{id};
-        jdbcTemplate.update(sql, parameters);
+        int rowsDeleted = jdbcTemplate.update(sql, parameters);
+
+        if (rowsDeleted == 0){
+            throw new CarNotFoundException("No item found to delete: " + id);
+        }
         return;
 
     }

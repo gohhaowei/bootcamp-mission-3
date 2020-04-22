@@ -1,11 +1,20 @@
 package com.btkbootcamp.mission3;
 
-//import org.springframework.http.HttpStatus;
-//import org.springframework.web.bind.annotation.ResponseStatus;
-
-//@ResponseStatus(HttpStatus.NOT_FOUND)
 public class CarNotFoundException extends RuntimeException {
-    public CarNotFoundException (int id){
-        super("Car id not found: " + id);
+
+    public CarNotFoundException(String message){
+        super(message);
+    }
+
+    public CarNotFoundException(String message, Throwable cause){
+        super(message, cause);
+    }
+
+    public CarNotFoundException(Throwable cause){
+        super(cause);
     }
 }
+
+
+
+

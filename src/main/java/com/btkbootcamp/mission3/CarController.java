@@ -3,7 +3,7 @@ package com.btkbootcamp.mission3;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import java.util.Optional;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/cars")
@@ -17,8 +17,10 @@ public class CarController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Car createCar(@RequestBody Car car){
-        carRepository.save(car);
-        return car;
+
+        Car savedCar = carRepository.save(car);
+
+        return savedCar;
     }
 
     // Get all cars
@@ -27,10 +29,22 @@ public class CarController {
         return carRepository.findAll();
     }
 
+    /*
     // Get car by Id
     @GetMapping ("/{id}")
-    public Optional<Car> getCarById(@PathVariable int id){
+    public Car getCarById(@PathVariable int id){
         return carRepository.findById(id);
+    }
+    */
+
+    @GetMapping ("/{id}")
+    public Car getCarById(@PathVariable int id){
+        try {
+            return carRepository.findById(id);
+        }
+        catch (CarNotFoundException e){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
     }
 
     // Delete car by Id
@@ -39,6 +53,21 @@ public class CarController {
     public void deleteCarById(@PathVariable int id){
         carRepository.deleteById(id);
     }
+
+    // Update car by Id
+    @PutMapping ("/{id}")
+    public Car updateCarById(@PathVariable int id, @RequestBody Car newCar){
+       Car updatedCar = carRepository.updateCarById(id, newCar);
+       return updatedCar;
+    }
+
+    /*
+
+
+
+
+
+
 
     // Update car by Id
     @PutMapping ("/{id}")
@@ -61,7 +90,7 @@ public class CarController {
             return newCar;
         }
 
-    }
+    }*/
 
 
 }
